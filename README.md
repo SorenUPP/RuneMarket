@@ -226,4 +226,4 @@ The OSRS Wiki API requires a descriptive `User-Agent` header, which is already s
 
 ## License
 
-No license has been specified for this project. Add a `LICENSE` file to define the terms under which this code may be used, modified, and distributed.
+No license has been specified for this project
