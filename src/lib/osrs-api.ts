@@ -9,8 +9,35 @@ async function osrsFetch(path: string) {
   return res.json();
 }
 
-export function getItemMapping() {
-  return osrsFetch("/mapping"); 
+export interface ItemMappingEntry {
+  id: number;
+  name: string;
+  limit?: number;
+  highalch?: number;
+  lowalch?: number;
+  icon?: string;
+  members?: boolean;
+  value?: number;
+  examine?: string;
+}
+
+export function getItemMapping(): Promise<ItemMappingEntry[]> {
+  return osrsFetch("/mapping");
+}
+
+// The item mapping (~4k items) is mostly static metadata (buy limits,
+// alch values, names) and rarely changes, so cache it in memory instead
+// of refetching the wiki on every request that needs it.
+let mappingCache: { data: ItemMappingEntry[]; fetchedAt: number } | null = null;
+const MAPPING_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
+export async function getCachedItemMapping(): Promise<ItemMappingEntry[]> {
+  if (mappingCache && Date.now() - mappingCache.fetchedAt < MAPPING_TTL_MS) {
+    return mappingCache.data;
+  }
+  const data = await getItemMapping();
+  mappingCache = { data, fetchedAt: Date.now() };
+  return data;
 }
 
 export function getLatestPrices() {

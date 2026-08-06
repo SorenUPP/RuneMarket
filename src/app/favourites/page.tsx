@@ -1,6 +1,5 @@
-import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
-import { TrendingCard } from "@/components/TrendingCard";
+import { WatchlistTable } from "@/components/WatchlistTable";
 import Link from "next/link";
 
 export default async function FavouritesPage() {
@@ -17,27 +16,15 @@ export default async function FavouritesPage() {
     );
   }
 
-  const favourites = await prisma.favourite.findMany({
-    where: { userId: user.id },
-    include: { item: true },
-    orderBy: { createdAt: "desc" },
-  });
-
   return (
     <div className="px-10 py-10 max-w-5xl mx-auto space-y-6">
-      <h1 className="font-display text-3xl text-foreground">Favourites</h1>
-      {favourites.length === 0 ? (
-        <p className="text-muted-foreground">No favourites yet — star an item to save it here.</p>
-      ) : (
-        <div className="grid grid-cols-2 gap-3">
-          {favourites.map((f: { item: { id: number; name: string; iconUrl: string | null } }) => (
-            <TrendingCard
-              key={f.item.id}
-              item={{ id: f.item.id, name: f.item.name, iconUrl: f.item.iconUrl, high: null, low: null }}
-            />
-          ))}
-        </div>
-      )}
+      <header className="space-y-1">
+        <h1 className="font-display text-3xl text-foreground">Favourites</h1>
+        <p className="text-sm text-muted-foreground">
+          Live buy/sell prices and tax-adjusted margins for everything you&apos;ve starred.
+        </p>
+      </header>
+      <WatchlistTable />
     </div>
   );
 }

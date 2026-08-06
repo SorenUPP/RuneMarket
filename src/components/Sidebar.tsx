@@ -5,12 +5,14 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
   LayoutGrid,
+  Calculator,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutGrid },
+  { href: "/screener", label: "Margin Finder", icon: Calculator },
 ];
 
 export function Sidebar() {
