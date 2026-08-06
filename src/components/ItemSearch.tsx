@@ -41,7 +41,11 @@ export function ItemSearch() {
   }, [query, search]);
 
   return (
-    <Command className="rounded-lg border border-border bg-card shadow-sm w-full max-w-xl">
+    <Command
+      className="rounded-lg border border-border bg-card shadow-sm w-full max-w-xl
+        transition-all duration-200 ease-out
+        focus-within:shadow-md focus-within:scale-[1.015] focus-within:border-primary/40 active:scale-[0.995]"
+    >
       <CommandInput
         placeholder="Search items (e.g. Abyssal whip)..."
         value={query}

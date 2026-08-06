@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Star } from "lucide-react";
+import { FAVOURITES_CHANGED_EVENT } from "@/components/FavouritesDrawer";
 
 export function FavouriteButton({
   itemId,
@@ -26,6 +27,7 @@ export function FavouriteButton({
     }
     setFavourited(!favourited);
     setLoading(false);
+    window.dispatchEvent(new Event(FAVOURITES_CHANGED_EVENT));
   }
 
   return (
@@ -33,7 +35,7 @@ export function FavouriteButton({
       onClick={toggle}
       disabled={loading}
       aria-label={favourited ? "Remove from favourites" : "Add to favourites"}
-      className={`rounded-md p-2 border transition-colors ${
+      className={`rounded-md p-2 border transition-all duration-150 active:scale-90 ${
         favourited
           ? "bg-primary/10 border-primary text-primary"
           : "border-border text-muted-foreground hover:text-foreground hover:border-primary/40"

@@ -1,30 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
   LayoutGrid,
-  Star,
-  User,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Trending", icon: LayoutGrid },
-  { href: "/favourites", label: "Favourites", icon: Star },
+  { href: "/", label: "Dashboard", icon: LayoutGrid },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
 
   const [collapsed, setCollapsed] = useState(false);
   const [narrow, setNarrow] = useState(false);
-  const [user, setUser] = useState<SupabaseUser | null>(null);
 
   const onAccount = pathname.startsWith("/login") || pathname.startsWith("/profile");
 
@@ -35,17 +28,6 @@ export function Sidebar() {
   useEffect(() => {
     setNarrow(collapsed);
   }, [collapsed]);
-
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => listener.subscription.unsubscribe();
-  }, []);
 
   return (
     <aside
@@ -101,26 +83,6 @@ export function Sidebar() {
           );
         })}
       </nav>
-
-      <div className="px-3 py-4 border-t border-sidebar-border">
-        <Link
-          href={user ? "/profile" : "/login"}
-          className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-            onAccount
-              ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-              : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
-          }`}
-        >
-          <User className="h-4 w-4 shrink-0" strokeWidth={2} />
-          <span
-            className={`whitespace-nowrap truncate transition-opacity duration-200 ${
-              narrow ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
-            }`}
-          >
-            {user ? user.email : "Account"}
-          </span>
-        </Link>
-      </div>
     </aside>
   );
 }

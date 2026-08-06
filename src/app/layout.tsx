@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Fraunces, IBM_Plex_Mono } from "next/font/google";
 import { Sidebar } from "@/components/Sidebar";
+import { TopRightControls } from "@/components/TopRightControls";
 import "./globals.css";
 
 const inter = Inter({
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   <div className="flex min-h-screen">
     <Sidebar />
     <main className="flex-1 min-w-0">{children}</main>
+    <TopRightControls />
   </div>
 </body> 
     </html>

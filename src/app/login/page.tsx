@@ -96,26 +96,26 @@ export default function LoginPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3">
-        <div className="relative">
+        <div className="relative transition-transform duration-150 ease-out focus-within:scale-[1.015] active:scale-[0.99]">
           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full border border-border rounded-md pl-10 pr-3 py-2 bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow"
+            className="w-full border border-border rounded-md pl-10 pr-3 py-2 bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow duration-200"
             required
           />
         </div>
 
-        <div className="relative">
+        <div className="relative transition-transform duration-150 ease-out focus-within:scale-[1.015] active:scale-[0.99]">
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="password"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full border border-border rounded-md pl-10 pr-3 py-2 bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow"
+            className="w-full border border-border rounded-md pl-10 pr-3 py-2 bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow duration-200"
             required
           />
         </div>

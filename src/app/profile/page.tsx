@@ -72,25 +72,25 @@ export default function ProfilePage() {
       </header>
 
       <form onSubmit={handleSave} className="space-y-4">
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 transition-transform duration-150 ease-out focus-within:scale-[1.015] active:scale-[0.99]">
           <label className="text-sm text-foreground">Display name</label>
           <input
             type="text"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="How should we call you?"
-            className="w-full border border-border rounded-md px-3 py-2 bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow"
+            className="w-full border border-border rounded-md px-3 py-2 bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow duration-200"
           />
         </div>
 
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 transition-transform duration-150 ease-out focus-within:scale-[1.015] active:scale-[0.99]">
           <label className="text-sm text-foreground">New password</label>
           <input
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             placeholder="Leave blank to keep current password"
-            className="w-full border border-border rounded-md px-3 py-2 bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow"
+            className="w-full border border-border rounded-md px-3 py-2 bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-shadow duration-200"
           />
         </div>
 
