@@ -12,7 +12,7 @@ export function TrendingMarquee({ items }: { items: TrendingItem[] }) {
   if (items.length === 0) {
     return (
       <p className="text-center text-sm text-muted-foreground">
-        No trending items right now.
+        No price data available right now.
       </p>
     );
   }
@@ -23,9 +23,9 @@ export function TrendingMarquee({ items }: { items: TrendingItem[] }) {
   return (
     <div className="space-y-3">
       <div className="flex items-baseline justify-center gap-2">
-        <h2 className="font-display text-xl text-foreground">Trending</h2>
+        <h2 className="font-display text-xl text-foreground">Highest Selling Items</h2>
         <span className="text-xs text-muted-foreground font-tabular">
-          {items.length} items
+          top {items.length}
         </span>
       </div>
 

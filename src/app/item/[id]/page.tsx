@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { PriceChart } from "@/components/PriceChart";
+import { PricePredictionChart } from "@/components/PricePredictionChart";
 import { ChangeBadge } from "@/components/ChangeBadge";
 import { FavouriteButton } from "@/components/FavouriteButton";
 import { createClient } from "@/lib/supabase/server";
@@ -90,6 +91,7 @@ export default async function ItemPage({
       )}
 
       <PriceChart itemId={itemId} />
+      <PricePredictionChart itemId={itemId} />
     </main>
   );
 }
