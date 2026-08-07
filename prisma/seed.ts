@@ -10,8 +10,8 @@ const prisma = new PrismaClient({ adapter });
 interface WikiItem {
   id: number;
   name: string;
-  icon: string; // filename, e.g. "Abyssal_whip.png"
-  members: boolean;
+  icon?: string; // filename, e.g. "Abyssal_whip.png"
+  members?: boolean;
 }
 
 async function main() {
@@ -22,11 +22,13 @@ async function main() {
   const iconBase = "https://oldschool.runescape.wiki/images/";
 
   const records = items.map((item) => ({
-    id: item.id,
-    name: item.name,
-    iconUrl: `${iconBase}${encodeURIComponent(item.icon.replace(/ /g, "_"))}`,
-    tradeable: true,
-  }));
+  id: item.id,
+  name: item.name,
+  iconUrl: item.icon
+    ? `${iconBase}${encodeURIComponent(item.icon.replace(/ /g, "_"))}`
+    : null,
+  tradeable: true,
+}));
 
   const BATCH_SIZE = 500;
   let inserted = 0;
