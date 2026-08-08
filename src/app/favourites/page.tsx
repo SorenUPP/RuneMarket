@@ -8,7 +8,7 @@ export default async function FavouritesPage() {
 
   if (!user) {
     return (
-      <div className="px-10 py-10 max-w-5xl mx-auto">
+      <div className="px-4 py-10 max-w-5xl mx-auto sm:px-10">
         <p className="text-muted-foreground">
           <Link href="/login" className="text-primary underline">Sign in</Link> to save favourites.
         </p>
@@ -17,7 +17,7 @@ export default async function FavouritesPage() {
   }
 
   return (
-    <div className="px-10 py-10 max-w-5xl mx-auto space-y-6">
+    <div className="px-4 py-8 max-w-5xl mx-auto space-y-6 sm:px-10 sm:py-10">
       <header className="space-y-1">
         <h1 className="font-display text-3xl text-foreground">Favourites</h1>
         <p className="text-sm text-muted-foreground">

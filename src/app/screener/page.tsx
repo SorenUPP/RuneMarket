@@ -8,11 +8,12 @@ export const metadata = {
 
 export default function ScreenerPage() {
   return (
-    <div className="mx-auto max-w-6xl space-y-8 px-6 py-10">
+    <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6 sm:py-10">
       <header className="space-y-1">
         <h1 className="font-display text-3xl text-foreground">Margin Finder</h1>
         <p className="text-sm text-muted-foreground">
-          Live buy/sell prices, tax-adjusted margins, and ROI across every tracked item.
+          Live buy/sell prices, tax-adjusted margins, and ROI across every tracked item — now
+          with real trade volume, staleness warnings, and a capital-aware flip screener.
         </p>
       </header>
 

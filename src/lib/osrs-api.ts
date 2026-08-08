@@ -44,6 +44,23 @@ export function getLatestPrices() {
   return osrsFetch("/latest"); 
 }
 
+export interface VolumeEntry {
+  avgHighPrice: number | null;
+  highPriceVolume: number;
+  avgLowPrice: number | null;
+  lowPriceVolume: number;
+}
+
+// 5-minute aggregate snapshot — the only endpoint that exposes real trade
+// volume (highPriceVolume/lowPriceVolume) across every item at once, unlike
+// /latest which is just the most recent two trades with no volume info.
+export function get5MinuteVolumes(): Promise<{
+  data: Record<string, VolumeEntry>;
+  timestamp: number;
+}> {
+  return osrsFetch("/5m");
+}
+
 export function getTimeseries(itemId: number, timestep: "5m" | "1h" | "6h" | "24h") {
   return osrsFetch(`/timeseries?timestep=${timestep}&id=${itemId}`);
 }

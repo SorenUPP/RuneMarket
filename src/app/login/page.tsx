@@ -57,7 +57,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="max-w-sm mx-auto mt-20 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="max-w-sm mx-auto mt-12 px-4 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300 sm:mt-20 sm:px-0">
       <div className="space-y-1">
         <h1 className="font-display text-2xl text-foreground">
           {mode === "login" ? "Welcome back" : "Create an account"}

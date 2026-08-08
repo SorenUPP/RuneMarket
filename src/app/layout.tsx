@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Fraunces, IBM_Plex_Mono } from "next/font/google";
-import { Sidebar } from "@/components/Sidebar";
-import { TopRightControls } from "@/components/TopRightControls";
+import { Topbar } from "@/components/Topbar";
 import "./globals.css";
 
 const inter = Inter({
@@ -33,12 +32,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${inter.variable} ${fraunces.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="bg-background text-foreground">
-  <div className="flex min-h-screen">
-    <Sidebar />
-    <main className="flex-1 min-w-0">{children}</main>
-    <TopRightControls />
-  </div>
-</body> 
+        <div className="flex min-h-screen flex-col">
+          <Topbar />
+          <main className="flex-1 min-w-0">{children}</main>
+        </div>
+      </body>
     </html>
   );
 }

@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getCachedItemMapping, getLatestPrices } from "@/lib/osrs-api";
+import { getCachedItemMapping, getLatestPrices, get5MinuteVolumes } from "@/lib/osrs-api";
 import { calculateMargin, calculatePotentialProfit } from "@/lib/ge-tax";
 
 interface LatestPriceEntry {
   high: number | null;
+  highTime?: number;
   low: number | null;
+  lowTime?: number;
 }
 
 export interface ScreenerItem {
@@ -20,18 +22,25 @@ export interface ScreenerItem {
   netProfit: number;
   roiPercent: number | null;
   potentialProfit: number | null;
+  volume: number;
+  members: boolean;
+  updatedSecondsAgo: number | null;
+  flipScore: number;
 }
 
 export async function GET() {
-  const [mapping, latest] = await Promise.all([
+  const [mapping, latest, volumes] = await Promise.all([
     getCachedItemMapping(),
     getLatestPrices(),
+    get5MinuteVolumes().catch(() => null),
   ]);
 
   const priceData = latest?.data as Record<string, LatestPriceEntry> | undefined;
   if (!priceData) {
     return NextResponse.json([]);
   }
+  const volumeData = volumes?.data ?? {};
+  const now = Math.floor(Date.now() / 1000);
 
   // Only surface items we track locally (tradeable === true), same
   // convention used by the trending/search routes.
@@ -64,6 +73,21 @@ export async function GET() {
     const buyLimit = meta.limit ?? null;
     const potentialProfit = calculatePotentialProfit(netProfit, buyLimit);
 
+    const vol = volumeData[meta.id];
+    const volume = vol ? vol.highPriceVolume + vol.lowPriceVolume : 0;
+
+    const lastTraded = Math.max(price.highTime ?? 0, price.lowTime ?? 0);
+    const updatedSecondsAgo = lastTraded > 0 ? Math.max(0, now - lastTraded) : null;
+
+    // A simple composite ranking that rewards margin, ROI, and liquidity
+    // together, so a huge-margin item nobody is trading doesn't outrank a
+    // smaller but genuinely flippable one. Volume is log-scaled since raw
+    // trade counts span several orders of magnitude across items.
+    const flipScore =
+      Math.max(0, netProfit) *
+      (1 + Math.min(2, (roiPercent ?? 0) / 20)) *
+      Math.log10(volume + 10);
+
     results.push({
       id: meta.id,
       name: meta.name,
@@ -76,6 +100,10 @@ export async function GET() {
       netProfit,
       roiPercent,
       potentialProfit,
+      volume,
+      members: meta.members ?? true,
+      updatedSecondsAgo,
+      flipScore,
     });
   }
 

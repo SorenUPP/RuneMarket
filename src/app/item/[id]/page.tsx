@@ -48,26 +48,26 @@ export default async function ItemPage({
 }
 
   return (
-    <main className="max-w-3xl mx-auto p-8">
-      <div className="flex items-center gap-4 mb-6">
+    <main className="max-w-3xl mx-auto px-4 py-6 sm:p-8">
+      <div className="flex items-center gap-3 mb-6 sm:gap-4">
         {item.iconUrl && (
-          <Image src={item.iconUrl} alt={item.name} width={48} height={48} />
+          <Image src={item.iconUrl} alt={item.name} width={40} height={40} className="shrink-0 sm:w-12 sm:h-12" />
         )}
-        <h1 className="font-display text-3xl text-foreground flex-1">{item.name}</h1>
+        <h1 className="font-display text-2xl text-foreground flex-1 min-w-0 sm:text-3xl">{item.name}</h1>
         {user && <FavouriteButton itemId={itemId} initialFavourited={isFavourited} />}
       </div>
 
       {price ? (
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="border rounded-lg p-4">
+        <div className="grid grid-cols-2 gap-3 mb-4 sm:gap-4">
+          <div className="border rounded-lg p-3 sm:p-4">
             <p className="text-sm text-muted-foreground">Instant Buy</p>
-            <p className="text-2xl font-semibold">
+            <p className="text-xl font-semibold sm:text-2xl">
               {price.high?.toLocaleString() ?? "—"} gp
             </p>
           </div>
-          <div className="border rounded-lg p-4">
+          <div className="border rounded-lg p-3 sm:p-4">
             <p className="text-sm text-muted-foreground">Instant Sell</p>
-            <p className="text-2xl font-semibold">
+            <p className="text-xl font-semibold sm:text-2xl">
               {price.low?.toLocaleString() ?? "—"} gp
             </p>
           </div>
@@ -77,7 +77,7 @@ export default async function ItemPage({
       )}
 
       {stats && (
-        <div className="grid grid-cols-4 gap-3 mb-8">
+        <div className="grid grid-cols-2 gap-3 mb-8 sm:grid-cols-4">
           <ChangeBadge label="24h" value={stats.change24h} />
           <ChangeBadge label="7d" value={stats.change7d} />
           <ChangeBadge label="30d" value={stats.change30d} />

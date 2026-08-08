@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTimeseries } from "@/lib/osrs-api";
+import {
+  ema,
+  bollingerBands,
+  macd,
+  macdSignalFromSeries,
+  volatilityPct,
+  type MacdSignal,
+} from "@/lib/technicals";
 
 interface TimeseriesPoint {
   timestamp: number;
@@ -14,6 +22,10 @@ interface DayPoint {
   timestamp: number; // unix seconds, end of day bucket
   price: number;
   volume: number;
+  ema12: number | null;
+  ema26: number | null;
+  bbUpper: number | null;
+  bbLower: number | null;
 }
 
 // --- small regression helpers (no external deps) ---
@@ -111,13 +123,29 @@ export async function GET(
   }
 
   const sortedDays = [...buckets.keys()].sort((a, b) => a - b);
+  const dailyPrices = sortedDays.map((dayKey) => {
+    const b = buckets.get(dayKey)!;
+    return b.prices.reduce((s, v) => s + v, 0) / b.prices.length;
+  });
+
+  // Technical indicators computed over the whole daily price series so each
+  // point lines up with its corresponding day (nulls until a window fills).
+  const ema12Series = ema(dailyPrices, 12);
+  const ema26Series = ema(dailyPrices, 26);
+  const bbSeries = bollingerBands(dailyPrices, 20, 2);
+  const macdSeries = macd(dailyPrices, 12, 26, 9);
+
   const daily: DayPoint[] = sortedDays.map((dayKey, i) => {
     const b = buckets.get(dayKey)!;
     return {
       day: i,
       timestamp: b.ts,
-      price: b.prices.reduce((s, v) => s + v, 0) / b.prices.length,
+      price: dailyPrices[i],
       volume: b.volume,
+      ema12: ema12Series[i],
+      ema26: ema26Series[i],
+      bbUpper: bbSeries[i].upper,
+      bbLower: bbSeries[i].lower,
     };
   });
 
@@ -157,14 +185,23 @@ export async function GET(
   };
   const anchorOffset = lastActualPrice - modelPriceAt(lastDay.day);
 
+  // Volatility (coefficient of variation over the trailing 14 days) drives a
+  // widening confidence band on the forecast: a random-walk-style assumption
+  // that uncertainty grows with sqrt(days ahead), scaled by how noisy this
+  // item's price actually is.
+  const vol14 = volatilityPct(prices, 14) ?? 0;
+
   const predicted = [];
   for (let i = 1; i <= futureDays; i++) {
     const t = lastDay.day + i;
-    const price = modelPriceAt(t) + anchorOffset;
+    const price = Math.max(0, modelPriceAt(t) + anchorOffset);
+    const band = price * (vol14 / 100) * Math.sqrt(i);
     predicted.push({
       day: t,
       timestamp: lastDay.timestamp + i * secondsPerDay,
-      price: Math.max(0, price),
+      price,
+      priceUpper: price + band,
+      priceLower: Math.max(0, price - band),
       projectedVolume: Math.round(volumeAt(t)),
     });
   }
@@ -173,6 +210,8 @@ export async function GET(
   const priceAtEnd = predicted[predicted.length - 1]?.price ?? lastActualPrice;
   const pctChange =
     lastActualPrice === 0 ? 0 : ((priceAtEnd - lastActualPrice) / lastActualPrice) * 100;
+
+  const { signal: macdSignal, crossover: macdCrossover } = macdSignalFromSeries(macdSeries);
 
   return NextResponse.json({
     historical: daily,
@@ -184,6 +223,9 @@ export async function GET(
       confidence: Math.round(priceOnVolume.r2 * 100), // how well volume explains price historically
       projectedChangePct: pctChange,
       horizonDays: futureDays,
+      volatilityPct: Math.round(vol14 * 10) / 10,
+      macdSignal: macdSignal as MacdSignal,
+      macdCrossover,
     },
   });
 }
