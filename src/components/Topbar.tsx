@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, Calculator } from "lucide-react";
+import { LayoutGrid, Calculator, Wallet, Scale } from "lucide-react";
 import { TopRightControls } from "@/components/TopRightControls";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutGrid },
   { href: "/screener", label: "Margin Finder", icon: Calculator },
+  { href: "/compare", label: "Compare", icon: Scale },
+  { href: "/portfolio", label: "Portfolio", icon: Wallet },
 ];
 
 export function Topbar() {

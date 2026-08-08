@@ -14,6 +14,8 @@ model Item {
   tradeable   Boolean  @default(true)
   prices      Price[]
   favourites Favourite[]
+  alerts      Alert[]
+  flips       Flip[]
   createdAt   DateTime @default(now())
 }
 
@@ -39,4 +41,43 @@ model Price {
   volume     Int?
 
   @@index([itemId, timestamp])
+}
+
+// A user-defined price trigger. `priceType` selects whether the target is
+// checked against the item's instant-buy ("high") or instant-sell ("low")
+// price, and `direction` whether the alert fires when price rises above or
+// falls below `targetPrice`. Checked periodically by /api/alerts/check.
+model Alert {
+  id          String    @id @default(uuid())
+  userId      String
+  itemId      Int
+  item        Item      @relation(fields: [itemId], references: [id])
+  direction   String // "above" | "below"
+  priceType   String    @default("low") // "low" (instant sell) | "high" (instant buy)
+  targetPrice Int
+  triggered   Boolean   @default(false)
+  triggeredAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
+  @@index([itemId, triggered])
+}
+
+// A logged buy (and optional sell) used by the portfolio / flip tracker to
+// compute realized P&L via the GE tax rules in lib/ge-tax.ts.
+model Flip {
+  id        String    @id @default(uuid())
+  userId    String
+  itemId    Int
+  item      Item      @relation(fields: [itemId], references: [id])
+  quantity  Int
+  buyPrice  Int
+  sellPrice Int?
+  status    String    @default("open") // "open" | "closed"
+  boughtAt  DateTime  @default(now())
+  soldAt    DateTime?
+  notes     String?
+
+  @@index([userId])
+  @@index([userId, status])
 }

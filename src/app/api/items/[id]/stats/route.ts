@@ -26,6 +26,25 @@ function sumVolume(points: TimeseriesPoint[]): number {
   );
 }
 
+// Coefficient of variation (stddev / mean) of the 24h price series, as a
+// percentage — a simple, comparable measure of how choppy an item's price
+// has been, independent of its absolute gp value.
+function calcVolatility(points: TimeseriesPoint[]): number | null {
+  const values = points
+    .map((p) => p.avgHighPrice)
+    .filter((v): v is number => v !== null && v > 0);
+  if (values.length < 2) return null;
+
+  const mean = values.reduce((sum, v) => sum + v, 0) / values.length;
+  if (mean === 0) return null;
+
+  const variance =
+    values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / values.length;
+  const stddev = Math.sqrt(variance);
+
+  return (stddev / mean) * 100;
+}
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -53,5 +72,6 @@ export async function GET(
     change7d: calcPctChange(points7d),
     change30d: calcPctChange(points30d),
     volume24h: sumVolume(points24h),
+    volatility24h: calcVolatility(points24h),
   });
 }

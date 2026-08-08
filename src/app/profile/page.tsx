@@ -17,6 +17,7 @@ import {
   Palette,
   Loader2
 } from "lucide-react";
+import { AlertsPanel } from "@/components/AlertsPanel";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -428,6 +429,9 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
+
+          {/* Card 5: Alerts */}
+          <AlertsPanel />
 
         </div>
 

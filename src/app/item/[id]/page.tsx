@@ -5,6 +5,7 @@ import { PriceChart } from "@/components/PriceChart";
 import { PricePredictionChart } from "@/components/PricePredictionChart";
 import { ChangeBadge } from "@/components/ChangeBadge";
 import { FavouriteButton } from "@/components/FavouriteButton";
+import { AlertButton } from "@/components/AlertButton";
 import { createClient } from "@/lib/supabase/server";
 
 async function getPrice(itemId: number) {
@@ -54,7 +55,12 @@ export default async function ItemPage({
           <Image src={item.iconUrl} alt={item.name} width={40} height={40} className="shrink-0 sm:w-12 sm:h-12" />
         )}
         <h1 className="font-display text-2xl text-foreground flex-1 min-w-0 sm:text-3xl">{item.name}</h1>
-        {user && <FavouriteButton itemId={itemId} initialFavourited={isFavourited} />}
+        {user && (
+          <div className="flex items-center gap-2">
+            <FavouriteButton itemId={itemId} initialFavourited={isFavourited} />
+            <AlertButton itemId={itemId} itemName={item.name} />
+          </div>
+        )}
       </div>
 
       {price ? (
@@ -77,7 +83,7 @@ export default async function ItemPage({
       )}
 
       {stats && (
-        <div className="grid grid-cols-2 gap-3 mb-8 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 mb-8 sm:grid-cols-5">
           <ChangeBadge label="24h" value={stats.change24h} />
           <ChangeBadge label="7d" value={stats.change7d} />
           <ChangeBadge label="30d" value={stats.change30d} />
@@ -86,6 +92,17 @@ export default async function ItemPage({
             <p className="text-lg font-semibold">
               {stats.volume24h?.toLocaleString() ?? "—"}
             </p>
+          </div>
+          <div className="border rounded-lg p-3">
+            <p className="text-xs text-muted-foreground">Volatility</p>
+            <p className="text-lg font-semibold">
+              {stats.volatility24h != null ? `${stats.volatility24h.toFixed(1)}%` : "—"}
+            </p>
+            {stats.volatility24h != null && (
+              <p className="text-[11px] text-muted-foreground">
+                {stats.volatility24h < 2 ? "Low" : stats.volatility24h < 5 ? "Moderate" : "High"} swing
+              </p>
+            )}
           </div>
         </div>
       )}
