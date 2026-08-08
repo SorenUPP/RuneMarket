@@ -12,9 +12,10 @@ export async function PATCH(
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
 
   const { id } = await params;
-  const { sellPrice } = await req.json();
+  const body = await req.json().catch(() => null);
+  const sellPrice = Number(body?.sellPrice);
 
-  if (!Number.isFinite(sellPrice) || sellPrice <= 0) {
+  if (!Number.isFinite(sellPrice) || sellPrice <= 0 || sellPrice > 2_147_483_647) {
     return NextResponse.json({ error: "Invalid sell price" }, { status: 400 });
   }
 

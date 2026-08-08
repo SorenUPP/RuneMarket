@@ -46,17 +46,35 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
 
-  const { itemId, quantity, buyPrice, notes } = await req.json();
+  const body = await req.json().catch(() => null);
+  const itemId = Number(body?.itemId);
+  const quantity = Number(body?.quantity);
+  const buyPrice = Number(body?.buyPrice);
+  const notes = body?.notes;
 
-  if (!Number.isFinite(itemId) || !Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(buyPrice) || buyPrice <= 0) {
+  if (
+    !Number.isInteger(itemId) ||
+    itemId <= 0 ||
+    !Number.isInteger(quantity) ||
+    quantity <= 0 ||
+    quantity > 2_000_000_000 || // GE buy limits never come close to this; blocks bogus P&L math
+    !Number.isFinite(buyPrice) ||
+    buyPrice <= 0 ||
+    buyPrice > 2_147_483_647
+  ) {
     return NextResponse.json({ error: "Invalid flip parameters" }, { status: 400 });
+  }
+
+  const item = await prisma.item.findUnique({ where: { id: itemId }, select: { id: true } });
+  if (!item) {
+    return NextResponse.json({ error: "Item not found" }, { status: 404 });
   }
 
   const flip = await prisma.flip.create({
     data: {
       userId: user.id,
       itemId,
-      quantity: Math.round(quantity),
+      quantity,
       buyPrice: Math.round(buyPrice),
       notes: typeof notes === "string" && notes.trim() ? notes.trim().slice(0, 280) : null,
     },

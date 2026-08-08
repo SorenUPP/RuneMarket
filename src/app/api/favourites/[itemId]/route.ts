@@ -10,10 +10,15 @@ export async function DELETE(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
 
-  const { itemId } = await params;
+  const { itemId: itemIdParam } = await params;
+  const itemId = Number(itemIdParam);
+
+  if (!Number.isInteger(itemId) || itemId <= 0) {
+    return NextResponse.json({ error: "Invalid item id" }, { status: 400 });
+  }
 
   await prisma.favourite.deleteMany({
-    where: { userId: user.id, itemId: Number(itemId) },
+    where: { userId: user.id, itemId },
   });
 
   return NextResponse.json({ ok: true });

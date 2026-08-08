@@ -35,6 +35,7 @@ export default function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   // Password fields
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -95,6 +96,20 @@ export default function ProfilePage() {
   const file = e.target.files?.[0];
   if (!file || !userId) return;
 
+  const MAX_BYTES = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    setMessage({ type: "error", text: "Please upload a JPEG, PNG, WebP, or GIF image." });
+    e.target.value = "";
+    return;
+  }
+  if (file.size > MAX_BYTES) {
+    setMessage({ type: "error", text: "Image must be smaller than 5MB." });
+    e.target.value = "";
+    return;
+  }
+
   setUploadingPhoto(true);
   setMessage(null);
 
@@ -104,7 +119,7 @@ export default function ProfilePage() {
 
     const { error: uploadError } = await supabase.storage
       .from("avatars")
-      .upload(filePath, file, { upsert: true });
+      .upload(filePath, file, { upsert: true, contentType: file.type });
 
     if (uploadError) {
       if (uploadError.message.includes("not found")) {
@@ -144,10 +159,27 @@ export default function ProfilePage() {
       return;
     }
 
+    if (!currentPassword) {
+      setMessage({ type: "error", text: "Enter your current password to confirm this change." });
+      return;
+    }
+
     setChangingPassword(true);
     setMessage(null);
 
     try {
+      // Re-verify identity before letting a session change the account
+      // password — otherwise a hijacked session (e.g. via XSS) could lock
+      // the real owner out without ever knowing their password.
+      const { error: reauthError } = await supabase.auth.signInWithPassword({
+        email,
+        password: currentPassword,
+      });
+      if (reauthError) {
+        setMessage({ type: "error", text: "Current password is incorrect." });
+        return;
+      }
+
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
@@ -155,6 +187,7 @@ export default function ProfilePage() {
       if (error) throw error;
 
       setMessage({ type: "success", text: "Password changed successfully." });
+      setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err: any) {
@@ -332,6 +365,19 @@ export default function ProfilePage() {
 
                 <div className="space-y-4">
                   <div>
+                    <label className="block text-xs font-semibold text-stone-600">Current Password</label>
+                    <input
+                      type="password"
+                      placeholder="••••••••"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      required
+                      autoComplete="current-password"
+                      className="mt-1 w-full rounded-lg border border-amber-300/80 bg-white px-3 py-2 text-sm text-stone-900 focus:border-amber-600 focus:outline-none focus:ring-1 focus:ring-amber-600"
+                    />
+                  </div>
+
+                  <div>
                     <label className="block text-xs font-semibold text-stone-600">New Password</label>
                     <input
                       type="password"
@@ -339,6 +385,7 @@ export default function ProfilePage() {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       required
+                      autoComplete="new-password"
                       className="mt-1 w-full rounded-lg border border-amber-300/80 bg-white px-3 py-2 text-sm text-stone-900 focus:border-amber-600 focus:outline-none focus:ring-1 focus:ring-amber-600"
                     />
                   </div>
@@ -351,6 +398,7 @@ export default function ProfilePage() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
+                      autoComplete="new-password"
                       className="mt-1 w-full rounded-lg border border-amber-300/80 bg-white px-3 py-2 text-sm text-stone-900 focus:border-amber-600 focus:outline-none focus:ring-1 focus:ring-amber-600"
                     />
                   </div>

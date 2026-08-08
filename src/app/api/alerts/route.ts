@@ -34,16 +34,34 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
 
-  const { itemId, direction, priceType, targetPrice } = await req.json();
+  const body = await req.json().catch(() => null);
+  const itemId = Number(body?.itemId);
+  const direction = body?.direction;
+  const priceType = body?.priceType;
+  const targetPrice = Number(body?.targetPrice);
 
   if (
-    !Number.isFinite(itemId) ||
+    !Number.isInteger(itemId) ||
+    itemId <= 0 ||
     !["above", "below"].includes(direction) ||
     !["high", "low"].includes(priceType) ||
     !Number.isFinite(targetPrice) ||
-    targetPrice <= 0
+    targetPrice <= 0 ||
+    targetPrice > 2_147_483_647 // fits Postgres int4, matches the Alert.targetPrice column
   ) {
     return NextResponse.json({ error: "Invalid alert parameters" }, { status: 400 });
+  }
+
+  const item = await prisma.item.findUnique({ where: { id: itemId }, select: { id: true } });
+  if (!item) {
+    return NextResponse.json({ error: "Item not found" }, { status: 404 });
+  }
+
+  // Cap how many active alerts one account can hold so a single user can't
+  // spam the table (and inflate the row set /api/alerts/check scans).
+  const activeCount = await prisma.alert.count({ where: { userId: user.id, triggered: false } });
+  if (activeCount >= 50) {
+    return NextResponse.json({ error: "Alert limit reached (50 active alerts)" }, { status: 429 });
   }
 
   const alert = await prisma.alert.create({

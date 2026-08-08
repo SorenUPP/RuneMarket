@@ -18,11 +18,21 @@ interface LatestPriceEntry {
  */
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
-  if (secret) {
-    const auth = req.headers.get("authorization");
-    if (auth !== `Bearer ${secret}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+
+  // Fail closed: without a configured secret this endpoint would otherwise
+  // be world-writable (anyone could force-trigger alerts or hammer the
+  // upstream OSRS price API on demand). Require it rather than treating an
+  // unset secret as "no auth needed".
+  if (!secret) {
+    return NextResponse.json(
+      { error: "CRON_SECRET is not configured; refusing to run" },
+      { status: 503 }
+    );
+  }
+
+  const auth = req.headers.get("authorization");
+  if (auth !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const pending = await prisma.alert.findMany({
