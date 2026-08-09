@@ -19,6 +19,28 @@ model Item {
   createdAt   DateTime @default(now())
 }
 
+model DeviceCode {
+  id         String    @id @default(cuid())
+  code       String    @unique
+  status     String    @default("pending") // "pending" | "approved" | "consumed"
+  userId     String?   // sätts när användaren klickar "Godkänn" i webbläsaren
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  approvedAt DateTime?
+}
+
+model ApiToken {
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String    @unique
+  label      String
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+
+  @@index([userId])
+}
+
 model Favourite {
   id        String   @id @default(uuid())
   userId    String
