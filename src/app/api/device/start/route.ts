@@ -13,7 +13,7 @@ import {
  * should open in the user's default browser.
  */
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://runemarket.vercel.app";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://runemarketadvanced.vercel.app/";
 
 export async function POST() {
   const code = generateDeviceCode();
