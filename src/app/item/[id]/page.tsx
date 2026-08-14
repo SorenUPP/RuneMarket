@@ -7,6 +7,8 @@ import { ChangeBadge } from "@/components/ChangeBadge";
 import { FavouriteButton } from "@/components/FavouriteButton";
 import { AlertButton } from "@/components/AlertButton";
 import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 
 async function getPrice(itemId: number) {
   const res = await fetch(
@@ -50,6 +52,14 @@ export default async function ItemPage({
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-6 sm:p-8">
+      <nav aria-label="Breadcrumb" className="mb-3 flex items-center gap-1.5 text-xs text-muted-foreground sm:text-sm">
+        <Link href="/" className="hover:text-foreground hover:underline">
+          Dashboard
+        </Link>
+        <ChevronRight className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+        <span className="truncate text-foreground/80">{item.name}</span>
+      </nav>
+
       <div className="flex items-center gap-3 mb-6 sm:gap-4">
         {item.iconUrl && (
           <Image src={item.iconUrl} alt={item.name} width={40} height={40} className="shrink-0 sm:w-12 sm:h-12" />

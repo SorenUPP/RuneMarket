@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { PortfolioTable } from "@/components/PortfolioTable";
 
@@ -13,6 +14,14 @@ export default async function PortfolioPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 px-4 py-8 sm:px-6 sm:py-10">
+      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-muted-foreground sm:text-sm">
+        <Link href="/" className="hover:text-foreground hover:underline">
+          Dashboard
+        </Link>
+        <ChevronRight className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+        <span className="text-foreground/80">Portfolio</span>
+      </nav>
+
       <header className="space-y-1">
         <h1 className="font-display text-3xl text-foreground">Portfolio</h1>
         <p className="text-sm text-muted-foreground">

@@ -479,7 +479,9 @@ export default function ProfilePage() {
           </div>
 
           {/* Card 5: Alerts */}
-          <AlertsPanel />
+          <div id="alerts">
+            <AlertsPanel />
+          </div>
 
         </div>
 
