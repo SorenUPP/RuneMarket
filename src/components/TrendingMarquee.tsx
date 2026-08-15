@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { TrendingCard } from "@/components/TrendingCard";
 
 interface TrendingItem {
@@ -20,6 +23,10 @@ export function TrendingMarquee({ items }: { items: TrendingItem[] }) {
   // Duplicate the list so the strip can loop seamlessly.
   const track = [...items, ...items];
 
+  // group-hover doesn't fire on touch devices, so track touch/press state
+  // explicitly to pause the marquee while someone's finger is on it.
+  const [touchPaused, setTouchPaused] = useState(false);
+
   return (
     <div className="space-y-3">
       <div className="flex items-baseline justify-center gap-2">
@@ -32,8 +39,14 @@ export function TrendingMarquee({ items }: { items: TrendingItem[] }) {
       <div
         className="group/marquee relative w-full overflow-hidden
           [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
+        onTouchStart={() => setTouchPaused(true)}
+        onTouchEnd={() => setTouchPaused(false)}
+        onTouchCancel={() => setTouchPaused(false)}
       >
-        <div className="flex w-max animate-marquee gap-3 group-hover/marquee:[animation-play-state:paused]">
+        <div
+          className="flex w-max animate-marquee gap-3 group-hover/marquee:[animation-play-state:paused]"
+          style={touchPaused ? { animationPlayState: "paused" } : undefined}
+        >
           {track.map((item, i) => (
             <div key={`${item.id}-${i}`} className="w-64 shrink-0">
               <TrendingCard item={item} />

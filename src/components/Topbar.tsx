@@ -18,6 +18,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { TopRightControls } from "@/components/TopRightControls";
+import { BottomNav } from "@/components/BottomNav";
 import {
   CommandDialog,
   CommandInput,
@@ -405,7 +406,7 @@ export function Topbar() {
             ref={mobileButtonRef}
             onClick={() => setMobileOpen(true)}
             aria-label="Open menu"
-            className="flex h-9 w-9 items-center justify-center rounded-md text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent/60 md:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-md text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent/60 md:hidden"
           >
             <Menu className="h-5 w-5" strokeWidth={2} />
           </button>
@@ -415,7 +416,7 @@ export function Topbar() {
           <button
             onClick={() => setPaletteOpen(true)}
             aria-label="Search pages and items"
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition-all duration-150 ease-out hover:text-primary hover:border-primary/40 hover:shadow-md active:scale-90 md:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition-all duration-150 ease-out hover:text-primary hover:border-primary/40 hover:shadow-md active:scale-90 md:hidden"
           >
             <Search className="h-4.5 w-4.5" strokeWidth={2} />
           </button>
@@ -428,7 +429,7 @@ export function Topbar() {
               aria-label="Notifications"
               aria-haspopup="true"
               aria-expanded={notifOpen}
-              className="relative flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm
+              className="relative flex h-11 w-11 md:h-9 md:w-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm
                 transition-all duration-150 ease-out hover:text-primary hover:border-primary/40 hover:shadow-md
                 active:scale-90"
             >
@@ -463,7 +464,7 @@ export function Topbar() {
                         >
                           <span className="font-medium text-foreground">{a.itemName}</span>
                           <span className="text-xs text-muted-foreground">
-                            {a.priceType} went {a.direction} {a.targetPrice.toLocaleString()}
+                            {a.priceType} went {a.direction} {a.targetPrice.toLocaleString("en-US")}
                           </span>
                         </Link>
                       </li>
@@ -497,7 +498,7 @@ export function Topbar() {
               <button
                 onClick={() => setMobileOpen(false)}
                 aria-label="Close menu"
-                className="flex h-9 w-9 items-center justify-center rounded-md text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
+                className="flex h-11 w-11 items-center justify-center rounded-md text-sidebar-foreground/80 hover:bg-sidebar-accent/60"
               >
                 <X className="h-5 w-5" strokeWidth={2} />
               </button>
@@ -628,6 +629,8 @@ export function Topbar() {
           )}
         </CommandList>
       </CommandDialog>
+
+      <BottomNav onOpenMenu={() => setMobileOpen(true)} onOpenSearch={() => setPaletteOpen(true)} />
     </header>
   );
 }

@@ -13,7 +13,7 @@ type SortKey = "grossMargin" | "roiPercent" | "potentialProfit";
 function formatGp(value: number | null): string {
   if (value === null || Number.isNaN(value)) return "—";
   const sign = value < 0 ? "-" : "";
-  return `${sign}${Math.abs(Math.round(value)).toLocaleString()} gp`;
+  return `${sign}${Math.abs(Math.round(value)).toLocaleString("en-US")} gp`;
 }
 
 function formatPercent(value: number | null): string {
@@ -115,7 +115,33 @@ export function WatchlistTable() {
 
   return (
     <div className="space-y-3">
-      <div className="overflow-x-auto rounded-lg border border-border">
+      {/* Sort control — shared by both table and card views, but only needs
+          its own visible row on mobile since the table has sortable headers */}
+      <div className="flex items-center gap-2 md:hidden">
+        <span className="text-xs text-muted-foreground">Sort by</span>
+        {(
+          [
+            ["roiPercent", "ROI"],
+            ["grossMargin", "Margin"],
+            ["potentialProfit", "Potential"],
+          ] as [SortKey, string][]
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => toggleSort(key)}
+            className={`flex h-9 items-center gap-1 rounded-lg border px-2.5 text-xs font-medium ${
+              sortKey === key
+                ? "border-primary/40 bg-primary/10 text-primary"
+                : "border-border text-muted-foreground"
+            }`}
+          >
+            {label} <SortIcon column={key} />
+          </button>
+        ))}
+      </div>
+
+      {/* Desktop/tablet: table */}
+      <div className="hidden md:block overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/50 text-left text-xs text-muted-foreground">
@@ -212,6 +238,63 @@ export function WatchlistTable() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile: card list */}
+      <div className="md:hidden flex flex-col gap-3">
+        {sorted.map((item) => (
+          <div key={item.id} className="rounded-lg border border-border p-3">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <Link
+                href={`/item/${item.id}`}
+                className="flex min-w-0 items-center gap-2 font-medium text-foreground"
+              >
+                {item.iconUrl ? (
+                  <Image src={item.iconUrl} alt={item.name} width={24} height={24} />
+                ) : (
+                  <div className="size-6 shrink-0 rounded bg-muted" />
+                )}
+                <span className="truncate">{item.name}</span>
+              </Link>
+              <div className="shrink-0 flex h-11 w-11 items-center justify-center">
+                <FavouriteButton itemId={item.id} initialFavourited={true} />
+              </div>
+            </div>
+
+            {item.hasLivePrice ? (
+              <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+                <div>
+                  <p className="text-xs text-muted-foreground">Buy</p>
+                  <p className="font-tabular">{formatGp(item.buyPrice)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Sell</p>
+                  <p className="font-tabular">{formatGp(item.sellPrice)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Gross margin</p>
+                  <p className="font-tabular">{formatGp(item.grossMargin)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">ROI</p>
+                  <p
+                    className={`font-tabular font-medium ${
+                      (item.roiPercent ?? 0) >= 0 ? "text-chart-2" : "text-destructive"
+                    }`}
+                  >
+                    {formatPercent(item.roiPercent)}
+                  </p>
+                </div>
+                <div className="col-span-2 flex items-center justify-between rounded-md bg-muted/40 px-2 py-1.5">
+                  <span className="text-xs text-muted-foreground">Potential (4h)</span>
+                  <span className="font-tabular font-medium">{formatGp(item.potentialProfit)}</span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No live GE price available right now.</p>
+            )}
+          </div>
+        ))}
       </div>
 
       <p className="text-xs text-muted-foreground">

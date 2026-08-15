@@ -40,7 +40,7 @@ function flipSourceBadge(notes: string | null): { label: string; className: stri
 function formatGp(value: number | null): string {
   if (value === null || Number.isNaN(value)) return "—";
   const sign = value < 0 ? "-" : "";
-  return `${sign}${Math.abs(Math.round(value)).toLocaleString()} gp`;
+  return `${sign}${Math.abs(Math.round(value)).toLocaleString("en-US")} gp`;
 }
 
 /** Runs `worker` over `items` with at most `limit` calls in flight at
@@ -90,10 +90,10 @@ export function priceWarning(estimatedPrice: number, marketPrice: number | null)
   if (!marketPrice || !Number.isFinite(estimatedPrice) || estimatedPrice <= 0) return null;
   const ratio = estimatedPrice / marketPrice;
   if (ratio >= 2) {
-    return `${ratio.toFixed(1)}x the current price (~${marketPrice.toLocaleString()} gp) — typo?`;
+    return `${ratio.toFixed(1)}x the current price (~${marketPrice.toLocaleString("en-US")} gp) — typo?`;
   }
   if (ratio <= 0.5) {
-    return `Only ${(ratio * 100).toFixed(0)}% of the current price (~${marketPrice.toLocaleString()} gp) — typo?`;
+    return `Only ${(ratio * 100).toFixed(0)}% of the current price (~${marketPrice.toLocaleString("en-US")} gp) — typo?`;
   }
   return null;
 }
@@ -725,8 +725,22 @@ export function PortfolioTable() {
 
   return (
     <div>
-      <LogFlipForm onLogged={load} />
+      <div id="log-a-buy">
+        <LogFlipForm onLogged={load} />
+      </div>
       <ImportHoldingsPanel onImported={load} alreadyImportedItemIds={alreadyImportedItemIds} />
+
+      {/* Mobile: floating shortcut back to the log-a-buy form, so it's
+          reachable without scrolling to the top after browsing flips */}
+      <button
+        onClick={() =>
+          document.getElementById("log-a-buy")?.scrollIntoView({ behavior: "smooth", block: "start" })
+        }
+        aria-label="Log a buy"
+        className="fixed bottom-20 right-4 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 md:hidden"
+      >
+        <Plus className="h-6 w-6" strokeWidth={2.5} />
+      </button>
 
       <div className="mb-6 border rounded-lg p-4">
         <p className="text-xs text-muted-foreground">Realized profit (all closed flips)</p>
@@ -739,38 +753,176 @@ export function PortfolioTable() {
       {open.length === 0 ? (
         <p className="text-sm text-muted-foreground mb-6">No open flips — log a buy above.</p>
       ) : (
-        <div className="overflow-x-auto mb-8">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-muted-foreground border-b border-border">
-                <th className="py-2 pr-3 font-medium">Item</th>
-                <th className="py-2 pr-3 font-medium">Qty</th>
-                <th className="py-2 pr-3 font-medium">Buy price</th>
-                <th className="py-2 pr-3 font-medium">Sell price to close</th>
-                <th className="py-2 pr-3 font-medium"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {open.map((f) => {
-                const isEditing = editingId === f.id;
-                const draft = editDrafts[f.id];
-                return (
-                  <tr key={f.id} className="border-b border-border/60">
-                    <td className="py-2 pr-3">
-                      <Link href={`/item/${f.itemId}`} className="flex items-center gap-2 hover:underline">
-                        {f.iconUrl && <Image src={f.iconUrl} alt="" width={20} height={20} />}
-                        {f.itemName}
-                        {(() => {
-                          const badge = flipSourceBadge(f.notes);
-                          return badge ? (
-                            <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${badge.className}`}>
-                              {badge.label}
-                            </span>
-                          ) : null;
-                        })()}
-                      </Link>
-                    </td>
-                    <td className="py-2 pr-3">
+        <div className="mb-8">
+          {/* Desktop/tablet: table */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-muted-foreground border-b border-border">
+                  <th className="py-2 pr-3 font-medium">Item</th>
+                  <th className="py-2 pr-3 font-medium">Qty</th>
+                  <th className="py-2 pr-3 font-medium">Buy price</th>
+                  <th className="py-2 pr-3 font-medium">Sell price to close</th>
+                  <th className="py-2 pr-3 font-medium"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {open.map((f) => {
+                  const isEditing = editingId === f.id;
+                  const draft = editDrafts[f.id];
+                  return (
+                    <tr key={f.id} className="border-b border-border/60">
+                      <td className="py-2 pr-3">
+                        <Link href={`/item/${f.itemId}`} className="flex items-center gap-2 hover:underline">
+                          {f.iconUrl && <Image src={f.iconUrl} alt="" width={20} height={20} />}
+                          {f.itemName}
+                          {(() => {
+                            const badge = flipSourceBadge(f.notes);
+                            return badge ? (
+                              <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${badge.className}`}>
+                                {badge.label}
+                              </span>
+                            ) : null;
+                          })()}
+                        </Link>
+                      </td>
+                      <td className="py-2 pr-3">
+                        {isEditing ? (
+                          <input
+                            value={draft?.quantity ?? ""}
+                            onChange={(e) =>
+                              setEditDrafts((d) => ({ ...d, [f.id]: { ...d[f.id], quantity: e.target.value } }))
+                            }
+                            inputMode="numeric"
+                            className="h-8 w-20 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                          />
+                        ) : (
+                          f.quantity
+                        )}
+                      </td>
+                      <td className="py-2 pr-3">
+                        {isEditing ? (
+                          <input
+                            value={draft?.buyPrice ?? ""}
+                            onChange={(e) =>
+                              setEditDrafts((d) => ({ ...d, [f.id]: { ...d[f.id], buyPrice: e.target.value } }))
+                            }
+                            inputMode="numeric"
+                            className="h-8 w-32 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                          />
+                        ) : (
+                          formatGp(f.buyPrice)
+                        )}
+                      </td>
+                      <td className="py-2 pr-3">
+                        <input
+                          value={sellDrafts[f.id] ?? ""}
+                          onChange={(e) => setSellDrafts((d) => ({ ...d, [f.id]: e.target.value }))}
+                          inputMode="numeric"
+                          placeholder="Sell price"
+                          disabled={isEditing}
+                          className="h-8 w-32 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
+                        />
+                      </td>
+                      <td className="py-2 pr-3">
+                        <div className="flex items-center gap-2">
+                          {isEditing ? (
+                            <>
+                              <button
+                                onClick={() => saveEdit(f.id)}
+                                disabled={savingEditId === f.id}
+                                aria-label="Save edit"
+                                className="flex h-8 items-center gap-1 rounded-lg bg-primary px-2 text-xs font-medium text-primary-foreground disabled:opacity-50"
+                              >
+                                {savingEditId === f.id ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <Check className="h-3.5 w-3.5" />
+                                )}
+                              </button>
+                              <button onClick={cancelEdit} aria-label="Cancel edit" className="text-muted-foreground hover:text-foreground">
+                                <X className="h-4 w-4" />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => closeFlip(f.id)}
+                                disabled={closingId === f.id}
+                                className="h-8 rounded-lg bg-primary px-3 text-xs font-medium text-primary-foreground disabled:opacity-50"
+                              >
+                                Close
+                              </button>
+                              <button onClick={() => startEdit(f)} aria-label="Edit flip" className="text-muted-foreground hover:text-foreground">
+                                <Pencil className="h-4 w-4" />
+                              </button>
+                              <button onClick={() => removeFlip(f.id)} aria-label="Delete flip" className="text-muted-foreground hover:text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile: card list */}
+          <div className="md:hidden flex flex-col gap-3">
+            {open.map((f) => {
+              const isEditing = editingId === f.id;
+              const draft = editDrafts[f.id];
+              const badge = flipSourceBadge(f.notes);
+              return (
+                <div key={f.id} className="rounded-lg border border-border p-3">
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <Link href={`/item/${f.itemId}`} className="flex min-w-0 items-center gap-2 hover:underline">
+                      {f.iconUrl && <Image src={f.iconUrl} alt="" width={24} height={24} />}
+                      <span className="truncate font-medium">{f.itemName}</span>
+                      {badge && (
+                        <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ${badge.className}`}>
+                          {badge.label}
+                        </span>
+                      )}
+                    </Link>
+                    <div className="flex shrink-0 items-center gap-1">
+                      {isEditing ? (
+                        <>
+                          <button
+                            onClick={() => saveEdit(f.id)}
+                            disabled={savingEditId === f.id}
+                            aria-label="Save edit"
+                            className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-primary-foreground disabled:opacity-50"
+                          >
+                            {savingEditId === f.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Check className="h-4 w-4" />
+                            )}
+                          </button>
+                          <button onClick={cancelEdit} aria-label="Cancel edit" className="flex h-11 w-11 items-center justify-center text-muted-foreground hover:text-foreground">
+                            <X className="h-5 w-5" />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button onClick={() => startEdit(f)} aria-label="Edit flip" className="flex h-11 w-11 items-center justify-center text-muted-foreground hover:text-foreground">
+                            <Pencil className="h-5 w-5" />
+                          </button>
+                          <button onClick={() => removeFlip(f.id)} aria-label="Delete flip" className="flex h-11 w-11 items-center justify-center text-muted-foreground hover:text-destructive">
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Qty</p>
                       {isEditing ? (
                         <input
                           value={draft?.quantity ?? ""}
@@ -778,13 +930,14 @@ export function PortfolioTable() {
                             setEditDrafts((d) => ({ ...d, [f.id]: { ...d[f.id], quantity: e.target.value } }))
                           }
                           inputMode="numeric"
-                          className="h-8 w-20 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                          className="mt-0.5 h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                         />
                       ) : (
-                        f.quantity
+                        <p>{f.quantity}</p>
                       )}
-                    </td>
-                    <td className="py-2 pr-3">
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Buy price</p>
                       {isEditing ? (
                         <input
                           value={draft?.buyPrice ?? ""}
@@ -792,66 +945,38 @@ export function PortfolioTable() {
                             setEditDrafts((d) => ({ ...d, [f.id]: { ...d[f.id], buyPrice: e.target.value } }))
                           }
                           inputMode="numeric"
-                          className="h-8 w-32 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                          className="mt-0.5 h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                         />
                       ) : (
-                        formatGp(f.buyPrice)
+                        <p>{formatGp(f.buyPrice)}</p>
                       )}
-                    </td>
-                    <td className="py-2 pr-3">
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-xs text-muted-foreground">Sell price to close</p>
                       <input
                         value={sellDrafts[f.id] ?? ""}
                         onChange={(e) => setSellDrafts((d) => ({ ...d, [f.id]: e.target.value }))}
                         inputMode="numeric"
                         placeholder="Sell price"
                         disabled={isEditing}
-                        className="h-8 w-32 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
+                        className="mt-0.5 h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
                       />
-                    </td>
-                    <td className="py-2 pr-3">
-                      <div className="flex items-center gap-2">
-                        {isEditing ? (
-                          <>
-                            <button
-                              onClick={() => saveEdit(f.id)}
-                              disabled={savingEditId === f.id}
-                              aria-label="Save edit"
-                              className="flex h-8 items-center gap-1 rounded-lg bg-primary px-2 text-xs font-medium text-primary-foreground disabled:opacity-50"
-                            >
-                              {savingEditId === f.id ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <Check className="h-3.5 w-3.5" />
-                              )}
-                            </button>
-                            <button onClick={cancelEdit} aria-label="Cancel edit" className="text-muted-foreground hover:text-foreground">
-                              <X className="h-4 w-4" />
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => closeFlip(f.id)}
-                              disabled={closingId === f.id}
-                              className="h-8 rounded-lg bg-primary px-3 text-xs font-medium text-primary-foreground disabled:opacity-50"
-                            >
-                              Close
-                            </button>
-                            <button onClick={() => startEdit(f)} aria-label="Edit flip" className="text-muted-foreground hover:text-foreground">
-                              <Pencil className="h-4 w-4" />
-                            </button>
-                            <button onClick={() => removeFlip(f.id)} aria-label="Delete flip" className="text-muted-foreground hover:text-destructive">
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </div>
+                  </div>
+
+                  {!isEditing && (
+                    <button
+                      onClick={() => closeFlip(f.id)}
+                      disabled={closingId === f.id}
+                      className="mt-3 h-11 w-full rounded-lg bg-primary text-sm font-medium text-primary-foreground disabled:opacity-50"
+                    >
+                      {closingId === f.id ? "Closing..." : "Close flip"}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -859,45 +984,93 @@ export function PortfolioTable() {
       {closed.length === 0 ? (
         <p className="text-sm text-muted-foreground">Closed flips will show their realized P&amp;L here.</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-muted-foreground border-b border-border">
-                <th className="py-2 pr-3 font-medium">Item</th>
-                <th className="py-2 pr-3 font-medium">Qty</th>
-                <th className="py-2 pr-3 font-medium">Buy</th>
-                <th className="py-2 pr-3 font-medium">Sell</th>
-                <th className="py-2 pr-3 font-medium">Net profit</th>
-                <th className="py-2 pr-3 font-medium">ROI</th>
-                <th className="py-2 pr-3 font-medium"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {closed.map((f) => (
-                <tr key={f.id} className="border-b border-border/60">
-                  <td className="py-2 pr-3">
-                    <Link href={`/item/${f.itemId}`} className="flex items-center gap-2 hover:underline">
-                      {f.iconUrl && <Image src={f.iconUrl} alt="" width={20} height={20} />}
-                      {f.itemName}
-                    </Link>
-                  </td>
-                  <td className="py-2 pr-3">{f.quantity}</td>
-                  <td className="py-2 pr-3">{formatGp(f.buyPrice)}</td>
-                  <td className="py-2 pr-3">{formatGp(f.sellPrice)}</td>
-                  <td className={`py-2 pr-3 font-medium ${(f.netProfit ?? 0) >= 0 ? "text-primary" : "text-destructive"}`}>
-                    {formatGp(f.netProfit)}
-                  </td>
-                  <td className="py-2 pr-3">{f.roiPercent !== null ? `${f.roiPercent.toFixed(2)}%` : "—"}</td>
-                  <td className="py-2 pr-3">
-                    <button onClick={() => removeFlip(f.id)} aria-label="Delete flip" className="text-muted-foreground hover:text-destructive">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </td>
+        <>
+          {/* Desktop/tablet: table */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-muted-foreground border-b border-border">
+                  <th className="py-2 pr-3 font-medium">Item</th>
+                  <th className="py-2 pr-3 font-medium">Qty</th>
+                  <th className="py-2 pr-3 font-medium">Buy</th>
+                  <th className="py-2 pr-3 font-medium">Sell</th>
+                  <th className="py-2 pr-3 font-medium">Net profit</th>
+                  <th className="py-2 pr-3 font-medium">ROI</th>
+                  <th className="py-2 pr-3 font-medium"></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {closed.map((f) => (
+                  <tr key={f.id} className="border-b border-border/60">
+                    <td className="py-2 pr-3">
+                      <Link href={`/item/${f.itemId}`} className="flex items-center gap-2 hover:underline">
+                        {f.iconUrl && <Image src={f.iconUrl} alt="" width={20} height={20} />}
+                        {f.itemName}
+                      </Link>
+                    </td>
+                    <td className="py-2 pr-3">{f.quantity}</td>
+                    <td className="py-2 pr-3">{formatGp(f.buyPrice)}</td>
+                    <td className="py-2 pr-3">{formatGp(f.sellPrice)}</td>
+                    <td className={`py-2 pr-3 font-medium ${(f.netProfit ?? 0) >= 0 ? "text-primary" : "text-destructive"}`}>
+                      {formatGp(f.netProfit)}
+                    </td>
+                    <td className="py-2 pr-3">{f.roiPercent !== null ? `${f.roiPercent.toFixed(2)}%` : "—"}</td>
+                    <td className="py-2 pr-3">
+                      <button onClick={() => removeFlip(f.id)} aria-label="Delete flip" className="text-muted-foreground hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile: card list */}
+          <div className="md:hidden flex flex-col gap-3">
+            {closed.map((f) => (
+              <div key={f.id} className="rounded-lg border border-border p-3">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <Link href={`/item/${f.itemId}`} className="flex min-w-0 items-center gap-2 hover:underline">
+                    {f.iconUrl && <Image src={f.iconUrl} alt="" width={24} height={24} />}
+                    <span className="truncate font-medium">{f.itemName}</span>
+                  </Link>
+                  <button
+                    onClick={() => removeFlip(f.id)}
+                    aria-label="Delete flip"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center text-muted-foreground hover:text-destructive"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Qty</p>
+                    <p>{f.quantity}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">ROI</p>
+                    <p>{f.roiPercent !== null ? `${f.roiPercent.toFixed(2)}%` : "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Buy</p>
+                    <p>{formatGp(f.buyPrice)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Sell</p>
+                    <p>{formatGp(f.sellPrice)}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-xs text-muted-foreground">Net profit</p>
+                    <p className={`font-medium ${(f.netProfit ?? 0) >= 0 ? "text-primary" : "text-destructive"}`}>
+                      {formatGp(f.netProfit)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

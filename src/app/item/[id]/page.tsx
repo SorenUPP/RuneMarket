@@ -78,13 +78,13 @@ export default async function ItemPage({
           <div className="border rounded-lg p-3 sm:p-4">
             <p className="text-sm text-muted-foreground">Instant Buy</p>
             <p className="text-xl font-semibold sm:text-2xl">
-              {price.high?.toLocaleString() ?? "—"} gp
+              {price.high?.toLocaleString("en-US") ?? "—"} gp
             </p>
           </div>
           <div className="border rounded-lg p-3 sm:p-4">
             <p className="text-sm text-muted-foreground">Instant Sell</p>
             <p className="text-xl font-semibold sm:text-2xl">
-              {price.low?.toLocaleString() ?? "—"} gp
+              {price.low?.toLocaleString("en-US") ?? "—"} gp
             </p>
           </div>
         </div>
@@ -100,7 +100,7 @@ export default async function ItemPage({
           <div className="border rounded-lg p-3">
             <p className="text-xs text-muted-foreground">24h Volume</p>
             <p className="text-lg font-semibold">
-              {stats.volume24h?.toLocaleString() ?? "—"}
+              {stats.volume24h?.toLocaleString("en-US") ?? "—"}
             </p>
           </div>
           <div className="border rounded-lg p-3">

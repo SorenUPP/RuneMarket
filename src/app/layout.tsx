@@ -34,7 +34,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="bg-background text-foreground">
         <div className="flex min-h-screen flex-col">
           <Topbar />
-          <main className="flex-1 min-w-0">{children}</main>
+          {/* Bottom padding on mobile clears the fixed BottomNav rendered by Topbar */}
+          <main className="flex-1 min-w-0 pb-16 md:pb-0">{children}</main>
         </div>
       </body>
     </html>

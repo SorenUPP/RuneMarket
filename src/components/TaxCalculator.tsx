@@ -19,7 +19,7 @@ interface PriceResponse {
 
 function formatGp(value: number): string {
   const sign = value < 0 ? "-" : "";
-  return `${sign}${Math.abs(Math.round(value)).toLocaleString()} gp`;
+  return `${sign}${Math.abs(Math.round(value)).toLocaleString("en-US")} gp`;
 }
 
 export function TaxCalculator() {
@@ -182,13 +182,13 @@ export function TaxCalculator() {
             tone={margin.roiPercent !== null && margin.roiPercent >= 0 ? "good" : "bad"}
           />
           <Stat
-            label={`Total profit (x${qtyNum.toLocaleString()})`}
+            label={`Total profit (x${qtyNum.toLocaleString("en-US")})`}
             value={formatGp(margin.netProfit * qtyNum)}
             tone={margin.netProfit >= 0 ? "good" : "bad"}
             span
           />
           <Stat
-            label={`Total tax (x${qtyNum.toLocaleString()})`}
+            label={`Total tax (x${qtyNum.toLocaleString("en-US")})`}
             value={formatGp(margin.tax * qtyNum)}
             span
           />

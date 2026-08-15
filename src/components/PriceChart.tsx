@@ -27,18 +27,22 @@ export function PriceChart({ itemId }: { itemId: number }) {
   useEffect(() => {
     if (!containerRef.current) return;
 
+    const isMobile = window.innerWidth < 640;
+
     const chart = createChart(containerRef.current, {
       layout: {
         background: { type: ColorType.Solid, color: "transparent" },
         textColor: "#888",
+        fontSize: isMobile ? 10 : 12,
       },
       grid: {
         vertLines: { color: "#222" },
         horzLines: { color: "#222" },
       },
       width: containerRef.current.clientWidth,
-      height: 400,
+      height: isMobile ? 240 : 400,
       timeScale: { timeVisible: true },
+      rightPriceScale: { minimumWidth: isMobile ? 48 : 72 },
     });
     chartRef.current = chart;
 
@@ -67,7 +71,11 @@ export function PriceChart({ itemId }: { itemId: number }) {
 
     const handleResize = () => {
       if (containerRef.current) {
-        chart.applyOptions({ width: containerRef.current.clientWidth });
+        const mobile = window.innerWidth < 640;
+        chart.applyOptions({
+          width: containerRef.current.clientWidth,
+          height: mobile ? 240 : 400,
+        });
       }
     };
     window.addEventListener("resize", handleResize);
@@ -80,12 +88,12 @@ export function PriceChart({ itemId }: { itemId: number }) {
 
   return (
     <div>
-      <div className="flex gap-2 mb-3">
+      <div className="grid grid-cols-4 gap-2 mb-3 sm:flex sm:gap-2">
         {TIMESTEPS.map((t) => (
           <button
             key={t.value}
             onClick={() => setTimestep(t.value)}
-            className={`px-3 py-1 text-sm rounded ${
+            className={`h-11 sm:h-auto px-3 sm:py-1 text-sm font-medium rounded-lg sm:rounded ${
               timestep === t.value
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground"

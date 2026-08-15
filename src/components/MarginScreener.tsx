@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -10,6 +10,7 @@ import {
   Loader2,
   Download,
   AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -47,7 +48,7 @@ interface Preset {
 function formatGp(value: number | null): string {
   if (value === null || Number.isNaN(value)) return "—";
   const sign = value < 0 ? "-" : "";
-  return `${sign}${Math.abs(Math.round(value)).toLocaleString()} gp`;
+  return `${sign}${Math.abs(Math.round(value)).toLocaleString("en-US")} gp`;
 }
 
 function formatPercent(value: number | null): string {
@@ -122,28 +123,43 @@ export function MarginScreener() {
 
   const [userId, setUserId] = useState<string | null>(null);
   const [favouriteIds, setFavouriteIds] = useState<Set<number>>(new Set());
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    fetch("/api/items/screener")
+  const loadScreener = useCallback(() => {
+    return fetch("/api/items/screener")
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load screener data");
         return res.json();
       })
       .then((data: ScreenerItem[]) => {
-        if (!cancelled) setItems(data);
+        setItems(data);
+        setError(null);
       })
       .catch((err) => {
-        if (!cancelled) setError(err.message ?? "Something went wrong");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
+        setError(err.message ?? "Something went wrong");
       });
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    loadScreener().finally(() => {
+      if (!cancelled) setLoading(false);
+    });
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function refresh() {
+    setRefreshing(true);
+    try {
+      await loadScreener();
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   // Track sign-in state and current favourites so rows can be starred
   // directly from the screener without a trip to the item page.
@@ -305,10 +321,23 @@ export function MarginScreener() {
             {preset.label}
           </Button>
         ))}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={refresh}
+          disabled={refreshing || loading}
+          className="ml-auto"
+          aria-label="Refresh prices"
+          title="Refresh live GE prices"
+        >
+          <RefreshCw className={`size-3.5 ${refreshing ? "animate-spin" : ""}`} />
+          <span className="hidden sm:inline">Refresh</span>
+        </Button>
       </div>
 
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="flex-1 min-w-[180px]">
+      <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
+        <div className="col-span-2 sm:flex-1 sm:min-w-[180px]">
           <label className="mb-1 block text-xs font-medium text-muted-foreground">
             Search
           </label>
@@ -318,7 +347,7 @@ export function MarginScreener() {
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
-        <div className="w-32">
+        <div className="sm:w-32">
           <label className="mb-1 block text-xs font-medium text-muted-foreground">
             Min margin (gp)
           </label>
@@ -329,7 +358,7 @@ export function MarginScreener() {
             onChange={(e) => setMinMargin(e.target.value)}
           />
         </div>
-        <div className="w-28">
+        <div className="sm:w-28">
           <label className="mb-1 block text-xs font-medium text-muted-foreground">
             Min ROI %
           </label>
@@ -340,7 +369,7 @@ export function MarginScreener() {
             onChange={(e) => setMinRoi(e.target.value)}
           />
         </div>
-        <div className="w-28">
+        <div className="sm:w-28">
           <label className="mb-1 block text-xs font-medium text-muted-foreground">
             Min volume
           </label>
@@ -351,7 +380,7 @@ export function MarginScreener() {
             onChange={(e) => setMinVolume(e.target.value)}
           />
         </div>
-        <div className="w-36">
+        <div className="sm:w-36">
           <label className="mb-1 block text-xs font-medium text-muted-foreground">
             My capital (gp)
           </label>
@@ -362,7 +391,7 @@ export function MarginScreener() {
             onChange={(e) => setBudget(e.target.value)}
           />
         </div>
-        <div>
+        <div className="col-span-2 sm:col-auto">
           <label className="mb-1 block text-xs font-medium text-muted-foreground">
             Access
           </label>
@@ -372,7 +401,7 @@ export function MarginScreener() {
                 key={m}
                 type="button"
                 onClick={() => setMembership(m)}
-                className={`rounded-md px-2.5 py-1.5 font-medium capitalize transition-colors ${
+                className={`flex-1 rounded-md px-2.5 py-2 sm:py-1.5 font-medium capitalize transition-colors ${
                   membership === m
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -383,18 +412,18 @@ export function MarginScreener() {
             ))}
           </div>
         </div>
-        <label className="flex h-8 items-center gap-1.5 text-xs font-medium text-muted-foreground">
+        <label className="col-span-2 sm:col-auto flex h-8 items-center gap-1.5 text-xs font-medium text-muted-foreground">
           <input
             type="checkbox"
             checked={hideStale}
             onChange={(e) => setHideStale(e.target.checked)}
-            className="size-3.5 rounded accent-primary"
+            className="size-4 sm:size-3.5 rounded accent-primary"
           />
           Hide stale prices
         </label>
 
         {hasFilters && (
-          <Button variant="outline" size="sm" onClick={clearFilters}>
+          <Button variant="outline" size="sm" onClick={clearFilters} className="col-span-2 sm:col-auto">
             Clear filters
           </Button>
         )}
@@ -404,14 +433,31 @@ export function MarginScreener() {
           size="sm"
           onClick={exportCsv}
           disabled={filtered.length === 0}
-          className="ml-auto"
+          className="col-span-2 sm:col-auto sm:ml-auto"
         >
           <Download className="size-3.5" />
           Export CSV
         </Button>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-border">
+      {/* Mobile: sort chips (table headers carry sorting on desktop) */}
+      <div className="flex gap-2 overflow-x-auto pb-1 md:hidden">
+        {(Object.keys(SORT_LABELS) as SortKey[]).map((key) => (
+          <button
+            key={key}
+            onClick={() => toggleSort(key)}
+            className={`flex h-9 shrink-0 items-center gap-1 rounded-lg border px-3 text-xs font-medium ${
+              sortKey === key
+                ? "border-primary/40 bg-primary/10 text-primary"
+                : "border-border text-muted-foreground"
+            }`}
+          >
+            {SORT_LABELS[key]} <SortIcon column={key} />
+          </button>
+        ))}
+      </div>
+
+      <div className="hidden md:block overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/50 text-left text-xs text-muted-foreground">
@@ -578,9 +624,9 @@ export function MarginScreener() {
                     <td className="px-3 py-2 font-tabular text-muted-foreground">
                       {budgetNum
                         ? Number.isFinite(affordableQty)
-                          ? affordableQty?.toLocaleString()
+                          ? affordableQty?.toLocaleString("en-US")
                           : "—"
-                        : item.buyLimit?.toLocaleString() ?? "—"}
+                        : item.buyLimit?.toLocaleString("en-US") ?? "—"}
                     </td>
                     <td className="px-3 py-2 font-tabular font-medium">
                       {formatGp(affordableProfit)}
@@ -588,7 +634,7 @@ export function MarginScreener() {
                     <td className="px-3 py-2 font-tabular text-muted-foreground">
                       {item.flipScore >= 1000
                         ? formatCompact(Math.round(item.flipScore))
-                        : Math.round(item.flipScore).toLocaleString()}
+                        : Math.round(item.flipScore).toLocaleString("en-US")}
                     </td>
                     {userId && (
                       <td className="px-3 py-2 text-right">
@@ -605,9 +651,132 @@ export function MarginScreener() {
         </table>
       </div>
 
+      {/* Mobile: compact card list */}
+      <div className="md:hidden flex flex-col gap-2">
+        {loading && (
+          <div className="flex items-center justify-center gap-2 rounded-lg border border-border py-10 text-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" />
+            Loading live GE prices...
+          </div>
+        )}
+        {!loading && error && (
+          <div className="rounded-lg border border-border py-10 text-center text-sm text-destructive">
+            {error}
+          </div>
+        )}
+        {!loading && !error && filtered.length === 0 && (
+          <div className="rounded-lg border border-border py-10 text-center text-sm text-muted-foreground">
+            No items match your filters.
+          </div>
+        )}
+        {!loading &&
+          !error &&
+          filtered.map((item) => {
+            const stale =
+              item.updatedSecondsAgo === null || item.updatedSecondsAgo > STALE_WARN_SECONDS;
+            const veryStale =
+              item.updatedSecondsAgo === null || item.updatedSecondsAgo > STALE_BAD_SECONDS;
+            const affordableQty = budgetNum
+              ? Math.min(item.buyLimit ?? Infinity, Math.floor(budgetNum / item.buyPrice))
+              : null;
+            const affordableProfit =
+              affordableQty !== null && Number.isFinite(affordableQty)
+                ? item.netProfit * affordableQty
+                : item.potentialProfit;
+
+            return (
+              <div key={item.id} className="rounded-lg border border-border p-3">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <Link
+                    href={`/item/${item.id}`}
+                    className="flex min-w-0 items-center gap-2 font-medium text-foreground"
+                  >
+                    {item.iconUrl ? (
+                      <Image src={item.iconUrl} alt={item.name} width={24} height={24} />
+                    ) : (
+                      <div className="size-6 shrink-0 rounded bg-muted" />
+                    )}
+                    <span className="truncate">{item.name}</span>
+                    {!item.members && (
+                      <span className="shrink-0 rounded border border-border px-1 py-0.5 text-[10px] font-medium text-muted-foreground">
+                        F2P
+                      </span>
+                    )}
+                  </Link>
+                  {userId && (
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center">
+                      <FavouriteButton
+                        itemId={item.id}
+                        initialFavourited={favouriteIds.has(item.id)}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-3 gap-x-2 gap-y-2 text-sm">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Margin</p>
+                    <p className="font-tabular">{formatGp(item.grossMargin)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">ROI</p>
+                    <p
+                      className={`font-tabular font-medium ${
+                        (item.roiPercent ?? 0) >= 0 ? "text-chart-2" : "text-destructive"
+                      }`}
+                    >
+                      {formatPercent(item.roiPercent)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Volume</p>
+                    <p className="font-tabular">{formatCompact(item.volume)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Flip score</p>
+                    <p className="font-tabular">
+                      {item.flipScore >= 1000
+                        ? formatCompact(Math.round(item.flipScore))
+                        : Math.round(item.flipScore).toLocaleString("en-US")}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">
+                      {budgetNum ? "Affordable" : "Buy limit"}
+                    </p>
+                    <p className="font-tabular">
+                      {budgetNum
+                        ? Number.isFinite(affordableQty)
+                          ? affordableQty?.toLocaleString("en-US")
+                          : "—"
+                        : item.buyLimit?.toLocaleString("en-US") ?? "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Updated</p>
+                    <p
+                      className={`inline-flex items-center gap-1 font-tabular text-xs ${
+                        veryStale ? "text-destructive" : stale ? "text-amber-600" : "text-foreground"
+                      }`}
+                    >
+                      {stale && <AlertTriangle className="size-3" />}
+                      {formatAge(item.updatedSecondsAgo)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-2 flex items-center justify-between rounded-md bg-muted/40 px-2 py-1.5 text-sm">
+                  <span className="text-xs text-muted-foreground">Potential (4h)</span>
+                  <span className="font-tabular font-medium">{formatGp(affordableProfit)}</span>
+                </div>
+              </div>
+            );
+          })}
+      </div>
+
       {!loading && !error && (
         <p className="text-xs text-muted-foreground">
-          Showing top {filtered.length} of {items.length.toLocaleString()} tracked items,
+          Showing top {filtered.length} of {items.length.toLocaleString("en-US")} tracked items,
           sorted by {SORT_LABELS[sortKey].toLowerCase()} ({sortDir === "desc" ? "highest first" : "lowest first"}).
           Margins already account for the 2% GE tax (capped at 5m gp/item). Volume is real trades
           in the last 5 minutes, from the OSRS wiki API — treat items showing "no trades" or a

@@ -33,7 +33,7 @@ const MAX_ITEMS = 4;
 function formatGp(value: number | null | undefined): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
   const sign = value < 0 ? "-" : "";
-  return `${sign}${Math.abs(Math.round(value)).toLocaleString()} gp`;
+  return `${sign}${Math.abs(Math.round(value)).toLocaleString("en-US")} gp`;
 }
 
 function formatPercent(value: number | null | undefined): string {
@@ -140,12 +140,19 @@ export function ItemCompare() {
 
   return (
     <div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+      <div
+        className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 -mx-4 px-4
+          sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 lg:grid-cols-4 mb-8"
+      >
         {picked.map((p) => {
           const item = items[p.id];
           const margin = item?.high && item?.low ? calculateMargin(item.low, item.high, item.id) : null;
           return (
-            <div key={p.id} className="relative border border-border rounded-lg p-4">
+            <div
+              key={p.id}
+              className="relative border border-border rounded-lg p-4 shrink-0 w-[80vw] snap-start
+                sm:w-auto sm:shrink"
+            >
               <button
                 onClick={() => removeItem(p.id)}
                 aria-label="Remove item"
@@ -184,7 +191,7 @@ export function ItemCompare() {
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">24h volume</dt>
-                    <dd>{item.stats?.volume24h?.toLocaleString() ?? "—"}</dd>
+                    <dd>{item.stats?.volume24h?.toLocaleString("en-US") ?? "—"}</dd>
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Volatility</dt>
@@ -202,7 +209,11 @@ export function ItemCompare() {
           );
         })}
 
-        {picked.length < MAX_ITEMS && <AddItemSlot disabled={false} onAdd={addItem} />}
+        {picked.length < MAX_ITEMS && (
+          <div className="shrink-0 w-[80vw] snap-start sm:w-auto sm:shrink">
+            <AddItemSlot disabled={false} onAdd={addItem} />
+          </div>
+        )}
       </div>
 
       {picked.length === 0 && (

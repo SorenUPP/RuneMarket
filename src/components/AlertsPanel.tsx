@@ -64,7 +64,7 @@ export function AlertsPanel() {
                 <p className="text-xs text-stone-500">
                   {a.priceType === "low" ? "Sell price" : "Buy price"}{" "}
                   {a.direction === "below" ? "drops below" : "rises above"}{" "}
-                  {a.targetPrice.toLocaleString()} gp
+                  {a.targetPrice.toLocaleString("en-US")} gp
                   {a.triggered && (
                     <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
                       Triggered

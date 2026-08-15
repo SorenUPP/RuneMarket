@@ -25,7 +25,7 @@ export function TrendingCard({ item }: { item: TrendingItem }) {
           {item.name}
         </p>
         <p className="text-sm text-muted-foreground font-tabular">
-          {item.high?.toLocaleString() ?? "—"} gp
+          {item.high?.toLocaleString("en-US") ?? "—"} gp
         </p>
       </div>
     </Link>
